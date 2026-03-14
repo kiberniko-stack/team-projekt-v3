@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream:#f5f0e8; --dark:#1a1714; --accent:#c8a96e;
+      --muted:#8a7f72; --border:#ddd6c8;
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--cream); min-height:100vh; }
+
+    /* ── PAGES ── */
+    #loginPage { display:flex; min-height:100vh; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+    #dashPage  { display:none; flex-direction:column; min-height:100vh; }
+
+    .bg-pattern {
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: radial-gradient(circle at 20% 20%,rgba(200,169,110,.12) 0%,transparent 50%), radial-gradient(circle at 80% 80%,rgba(26,23,20,.06) 0%,transparent 50%);
+    }
+    .bg-lines {
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(200,169,110,.07) 60px,rgba(200,169,110,.07) 61px);
+    }
+
+    /* ── LOGIN CARD ── */
+    .login-card {
+      position:relative; z-index:2; background:white; width:420px; padding:56px 48px;
+      box-shadow:0 2px 4px rgba(0,0,0,.04),0 24px 80px rgba(0,0,0,.10);
+      animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both;
+    }
+    .logo { width:36px; height:36px; background:var(--dark); margin-bottom:32px; position:relative; }
+    .logo::after { content:''; position:absolute; top:6px; left:6px; width:36px; height:36px; border:1.5px solid var(--accent); }
+    .login-card h1 { font-family:'Playfair Display',serif; font-size:28px; color:var(--dark); margin-bottom:6px; }
+    .login-card .sub { font-size:14px; color:var(--muted); margin-bottom:40px; font-weight:300; }
+    .field { margin-bottom:20px; }
+    .field label { display:block; font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .field input { width:100%; padding:13px 16px; border:1px solid var(--border); background:var(--cream); font-family:'DM Sans',sans-serif; font-size:15px; color:var(--dark); outline:none; transition:border-color .2s,background .2s; }
+    .field input:focus { border-color:var(--accent); background:white; }
+    .field input::placeholder { color:#c4bcb0; }
+    .err { font-size:12px; color:#b85c5c; background:rgba(184,92,92,.06); border:1px solid rgba(184,92,92,.2); padding:8px 12px; margin-top:8px; display:none; }
+    .login-btn { width:100%; margin-top:10px; padding:15px; background:var(--dark); color:var(--cream); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; border:none; cursor:pointer; transition:background .2s,transform .1s; position:relative; overflow:hidden; }
+    .login-btn:hover { background:#2e2925; }
+    .login-btn:active { transform:scale(.99); }
+    .login-btn .shine { position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent); transition:left .5s; }
+    .login-btn:hover .shine { left:150%; }
+
+    /* accounts table */
+    .accounts-box { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:10; background:white; border:1px solid var(--border); box-shadow:0 4px 24px rgba(0,0,0,.08); padding:14px 20px; min-width:500px; animation:fadeUp .7s .3s cubic-bezier(.22,1,.36,1) both; }
+    .accounts-box h3 { font-size:10px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th { text-align:left; font-size:10px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:4px 8px 8px; border-bottom:1px solid var(--border); }
+    td { padding:7px 8px; color:var(--dark); border-bottom:1px solid #f0ede8; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; }
+    .mono { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+    .qbtn { font-size:10px; padding:4px 12px; background:var(--cream); border:1px solid var(--border); cursor:pointer; font-family:'DM Sans',sans-serif; color:var(--dark); transition:all .15s; }
+    .qbtn:hover { background:var(--dark); color:var(--cream); border-color:var(--dark); }
+
+    /* ── TOP BAR ── */
+    .topbar { position:sticky; top:0; z-index:50; background:var(--dark); height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 40px; box-shadow:0 2px 20px rgba(0,0,0,.2); flex-shrink:0; }
+    .tb-left { display:flex; align-items:center; gap:14px; }
+    .tb-logo { width:28px; height:28px; background:var(--accent); position:relative; }
+    .tb-logo::after { content:''; position:absolute; top:4px; left:4px; width:28px; height:28px; border:1px solid rgba(255,255,255,.3); }
+    .tb-app { font-family:'Playfair Display',serif; font-size:16px; color:white; }
+    .tb-right { display:flex; align-items:center; gap:18px; }
+    .tb-clock { font-family:'DM Mono',monospace; font-size:13px; color:rgba(255,255,255,.45); }
+    .tb-user { display:flex; align-items:center; gap:10px; }
+    .tb-av { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:13px; color:white; flex-shrink:0; }
+    .tb-name { font-size:13px; color:rgba(255,255,255,.8); font-weight:500; }
+    .tb-out { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.4); background:none; border:1px solid rgba(255,255,255,.15); padding:5px 12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; }
+    .tb-out:hover { color:white; border-color:rgba(255,255,255,.4); }
+
+    /* ── HERO ── */
+    .hero { background:white; border-bottom:1px solid var(--border); padding:48px 40px 40px; position:relative; overflow:hidden; }
+    .hero::after { content:''; position:absolute; top:0; right:0; width:260px; height:100%; background:linear-gradient(135deg,transparent 40%,rgba(200,169,110,.05)); pointer-events:none; }
+    .hero-bar { width:44px; height:4px; margin-bottom:20px; }
+    .hero-greet { font-family:'Playfair Display',serif; font-size:clamp(30px,4vw,46px); font-weight:700; color:var(--dark); line-height:1.15; margin-bottom:14px; }
+    .hero-greet em { font-style:normal; }
+    .hero-meta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+    .hero-date { font-size:14px; color:var(--muted); font-weight:300; }
+    .hero-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; color:white; font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; }
+
+    /* ── MAIN ── */
+    .dash-body { padding:48px 40px 80px; max-width:1100px; margin:0 auto; width:100%; }
+    .sec-title { font-size:10px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
+    .sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── ACTION BUTTONS ── */
+    .btn-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; }
+    @media(max-width:900px){ .btn-grid{grid-template-columns:repeat(3,1fr);} }
+    @media(max-width:600px){ .btn-grid{grid-template-columns:1fr 1fr;} }
+
+    .act-btn { background:white; border:1px solid var(--border); padding:28px 22px 24px; text-align:left; cursor:pointer; transition:transform .2s,box-shadow .2s; position:relative; overflow:hidden; animation:fadeUp .5s ease both; }
+    .act-btn:hover { transform:translateY(-4px); box-shadow:0 10px 36px rgba(0,0,0,.09); }
+    .accent-line { position:absolute; bottom:0; left:0; width:100%; height:3px; transform:scaleX(0); transform-origin:left; transition:transform .25s ease; }
+    .act-btn:hover .accent-line { transform:scaleX(1); }
+    .act-icon { font-size:28px; margin-bottom:16px; display:block; line-height:1; }
+    .act-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:600; color:var(--dark); margin-bottom:6px; }
+    .act-desc { font-size:11px; color:var(--muted); line-height:1.55; font-weight:300; }
+    .act-arrow { position:absolute; top:18px; right:18px; font-size:15px; color:var(--border); transition:color .2s,transform .2s; }
+    .act-btn:hover .act-arrow { color:var(--accent); transform:translate(2px,-2px); }
+
+    /* ── TOAST ── */
+    .toast { position:fixed; bottom:28px; right:28px; z-index:999; background:var(--dark); color:white; padding:13px 22px; font-size:13px; box-shadow:0 8px 32px rgba(0,0,0,.2); opacity:0; transform:translateY(60px); transition:transform .35s cubic-bezier(.22,1,.36,1),opacity .3s; pointer-events:none; max-width:340px; }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:translateY(0);} }
+  </style>
+</head>
+<body>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="loginPage">
+  <div class="bg-pattern"></div>
+  <div class="bg-lines"></div>
+  <div class="login-card">
+    <div class="logo"></div>
+    <h1>Willkommen zurück</h1>
+    <p class="sub">Melde dich in deinem Konto an</p>
+    <div class="field">
+      <label>Benutzername</label>
+      <input type="text" id="uname" placeholder="benutzername" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Passwort</label>
+      <input type="password" id="pwd" placeholder="••••••••"/>
+      <div class="err" id="err">❌ Benutzername oder Passwort falsch.</div>
+    </div>
+    <button class="login-btn" id="loginBtn">
+      <span class="shine"></span>Anmelden
+    </button>
+  </div>
+  <div class="accounts-box">
+    <h3>👤 Testkonten — auf → Login klicken zum Schnellanmelden</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Benutzername</th><th>Passwort</th><th>Rolle</th><th></th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════ DASHBOARD ════════ -->
+<div id="dashPage">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo"></div>
+      <span class="tb-app">Team Portal</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-clock" id="clock"></span>
+      <div class="tb-user">
+        <div class="tb-av" id="tbAv"></div>
+        <span class="tb-name" id="tbName"></span>
+      </div>
+      <button class="tb-out" id="outBtn">Abmelden</button>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-bar" id="hBar"></div>
+    <div class="hero-greet" id="hGreet"></div>
+    <div class="hero-meta">
+      <span class="hero-date" id="hDate"></span>
+      <span class="hero-badge" id="hBadge"></span>
+    </div>
+  </div>
+  <div class="dash-body">
+    <div class="sec-title" id="secTitle"></div>
+    <div class="btn-grid" id="btnGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const USERS = [
+  { name:'Alexander König', username:'a.koenig', password:'Owner#2024', role:'Owner', color:'#c8a96e',
+    buttons:[
+      {icon:'👥',title:'Team verwalten',      desc:'Mitglieder, Rollen & Berechtigungen'},
+      {icon:'📊',title:'Berichte & Analytics',desc:'Projektstatus und KPIs einsehen'},
+      {icon:'⚙️',title:'Einstellungen',       desc:'System- und Projektkonfiguration'},
+      {icon:'💬',title:'Nachrichten',          desc:'Teamkommunikation & Ankündigungen'},
+      {icon:'🚀',title:'Deployment',           desc:'Produktionsfreigaben verwalten'},
+    ]},
+  { name:'Sophie Braun', username:'s.braun', password:'Front!456', role:'Frontend Mitarbeiter', color:'#6e9ec8',
+    buttons:[
+      {icon:'🎨',title:'Design System',    desc:'Komponenten, Farben & Typografie'},
+      {icon:'🖥️',title:'UI Komponenten',  desc:'Wiederverwendbare Interface-Elemente'},
+      {icon:'📱',title:'Responsiveness',  desc:'Mobile & Desktop-Ansichten prüfen'},
+      {icon:'🔍',title:'Code Review',     desc:'Frontend Pull Requests überprüfen'},
+      {icon:'📦',title:'Assets verwalten',desc:'Bilder, Icons & Medien organisieren'},
+    ]},
+  { name:'Markus Weber', username:'m.weber', password:'Back@789', role:'Backend Mitarbeiter', color:'#7c6ec8',
+    buttons:[
+      {icon:'🗄️',title:'Datenbank',         desc:'Schemas, Migrationen & Abfragen'},
+      {icon:'🔌',title:'API Endpunkte',      desc:'REST- und GraphQL-Endpunkte'},
+      {icon:'🔐',title:'Authentifizierung',  desc:'Auth-Flows & Sicherheitsregeln'},
+      {icon:'📡',title:'Server Logs',        desc:'Fehler & Zugriffe überwachen'},
+      {icon:'⚡',title:'Performance',        desc:'Caching & Optimierungen'},
+    ]},
+  { name:'Laura Fischer', username:'l.fischer', password:'QA$Test321', role:'QA Mitarbeiter', color:'#c86e6e',
+    buttons:[
+      {icon:'🧪',title:'Tests ausführen',desc:'Unit-, Integration- & E2E-Tests'},
+      {icon:'🐛',title:'Bug Tracker',    desc:'Fehler erfassen & priorisieren'},
+      {icon:'✅',title:'Checklisten',    desc:'Qualitätsprüfungen & Abnahmen'},
+      {icon:'📋',title:'Testberichte',   desc:'Ergebnisse & Statistiken einsehen'},
+      {icon:'🔄',title:'Regression',     desc:'Regressionstests nach Updates'},
+    ]},
+  { name:'Tom Schulz', username:'t.schulz', password:'Docs%2024', role:'Documentation Mitarbeiter', color:'#6ec8a0',
+    buttons:[
+      {icon:'📝',title:'Dokumente',      desc:'Technische Anleitungen erstellen'},
+      {icon:'📚',title:'Wiki',           desc:'Wissensbasis pflegen & erweitern'},
+      {icon:'🔖',title:'API Docs',       desc:'Schnittstellendokumentation'},
+      {icon:'🌐',title:'Übersetzungen',  desc:'Mehrsprachige Inhalte verwalten'},
+      {icon:'📤',title:'Veröffentlichen',desc:'Dokumentation exportieren & teilen'},
+    ]},
+];
+
+// Build table
+const tbl = document.getElementById('tbl');
+USERS.forEach((u,i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${u.name}</td><td><span class="mono">${u.username}</span></td><td><span class="mono">${u.password}</span></td><td><span class="dot" style="background:${u.color}"></span>${u.role}</td><td><button class="qbtn" onclick="quickLogin(${i})">→ Login</button></td>`;
+  tbl.appendChild(tr);
+});
+
+// Quick login
+window.quickLogin = function(i) {
+  document.getElementById('uname').value = USERS[i].username;
+  document.getElementById('pwd').value   = USERS[i].password;
+  document.getElementById('err').style.display = 'none';
+  setTimeout(doLogin, 120);
+};
+
+// Login button & Enter
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogin() {
+  const uname = document.getElementById('uname').value.trim().toLowerCase();
+  const pwd   = document.getElementById('pwd').value;
+  const user  = USERS.find(u => u.username===uname && u.password===pwd);
+  if (!user) {
+    document.getElementById('err').style.display = 'block';
+    document.getElementById('pwd').value = '';
+    return;
+  }
+  document.getElementById('err').style.display = 'none';
+  showDash(user);
+}
+
+// Clock
+let clockTimer = null;
+
+function showDash(user) {
+  // Switch pages
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('dashPage').style.display  = 'flex';
+  window.scrollTo(0,0);
+
+  // Role color everywhere
+  document.getElementById('hBar').style.background   = user.color;
+  document.getElementById('hBadge').style.background = user.color;
+  document.getElementById('tbAv').style.background   = user.color;
+
+  // Greeting
+  const h = new Date().getHours();
+  const gr = h<12?'Guten Morgen':h<18?'Guten Tag':'Guten Abend';
+  const fn = user.name.split(' ')[0];
+  document.getElementById('hGreet').innerHTML =
+    `${gr},<br/><em style="color:${user.color}">${fn}!</em>`;
+
+  // Date
+  document.getElementById('hDate').textContent =
+    new Date().toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Badge + avatar
+  document.getElementById('hBadge').textContent  = '🛡 ' + user.role;
+  document.getElementById('tbAv').textContent    = user.name.split(' ').map(n=>n[0]).join('');
+  document.getElementById('tbName').textContent  = user.name;
+  document.getElementById('secTitle').textContent = 'Aktionen für ' + user.role;
+
+  // Live clock
+  clearInterval(clockTimer);
+  const tick = () => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  };
+  tick(); clockTimer = setInterval(tick,1000);
+
+  // Build action buttons
+  const grid = document.getElementById('btnGrid');
+  grid.innerHTML = '';
+  user.buttons.forEach((b,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'act-btn';
+    btn.style.animationDelay = (0.06+i*0.07)+'s';
+    btn.innerHTML = `
+      <span class="act-icon">${b.icon}</span>
+      <div class="act-title">${b.title}</div>
+      <div class="act-desc">${b.desc}</div>
+      <span class="act-arrow">↗</span>
+      <div class="accent-line" style="background:${user.color}"></div>`;
+    btn.addEventListener('click', () => showToast(b.icon+' '+b.title, user.color));
+    grid.appendChild(btn);
+  });
+}
+
+// Logout
+document.getElementById('outBtn').addEventListener('click', () => {
+  clearInterval(clockTimer);
+  document.getElementById('dashPage').style.display  = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('uname').value = '';
+  document.getElementById('pwd').value   = '';
+  document.getElementById('btnGrid').innerHTML = '';
+});
+
+// Toast
+let toastTimer = null;
+function showToast(label, color) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span style="color:${color};font-weight:600">${label}</span><br/><span style="opacity:.55;font-size:11px">Diese Funktion wird bald verfügbar sein ✦</span>`;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
