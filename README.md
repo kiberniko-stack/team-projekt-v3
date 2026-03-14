@@ -1,6 +1,5 @@
 
-# AI Tool Portal (Professional Edition)
-
+# AI Tool Portal 
 AI Tool Portal is an open platform for managing, documenting, and exploring AI tools within teams or organizations.
 
 This repository contains a **fully documented reference implementation** designed for:
